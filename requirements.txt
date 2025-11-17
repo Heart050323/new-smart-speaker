@@ -1,9 +1,6 @@
-Flask==3.1.0
-markdown-it-py==4.0.0
-mdurl==0.1.2
-pygame==2.6.1
-Pygments==2.19.2
-rich==14.2.0
-setuptools==80.9.0
-SpeechRecognition==3.14.3
-typing_extensions==4.15.0
+webrtcvad==2.0.10
+sounddevice==0.4.6
+simpleaudio==1.0.4
+librosa==0.10.1
+scikit-learn==1.5.0
+numpy==1.26.0

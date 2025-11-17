@@ -1,202 +1,78 @@
-# お母さんスイッチ - Voice Command System
+# 話者同定プロジェクト
 
-近未来的なハッカー風デザインの音声対話システムのWeb GUI
+## 実行環境
+- OS: Ubuntu 22.04 / 24.04 推奨
+- Python: 3.12.x
+- pip: 最新版 (`sudo apt install python3-pip`)
+- libasoun2-dev (`sudo apt install build-essential portaudio19-dev libasound2-dev`)
 
-## 🎯 最新アップデート（v2.0）
+  インストールしておいてほしい諸々
+  python3 -m venv .venv      仮想環境作成
+  source .venv/bin/activate　　　　仮想環境に変更
+  pip install -r requirements.txt　　　　インストール
 
-- ✅ **ファイル分割**: CSS・JavaScriptを分離して可読性を向上
-- ✅ **音声録音機能**: MediaRecorder APIで音声データをキャプチャ
-- ✅ **音声データ送信**: テキストと音声ファイルを同時にサーバーへ送信
-- ✅ **話者識別準備**: 保存された音声ファイルで話者識別が可能に
 
-## � プロジェクト構成
 
-```
-new-smart-speaker/
-├── app.py                      # Flaskバックエンド（音声ファイル受信対応）
-├── tts.py                      # TTS機能
-├── requirements.txt            # Python依存関係
-├── start.sh                    # 起動スクリプト
-├── templates/
-│   └── index.html             # メインHTML（軽量化）
-├── static/
-│   ├── css/
-│   │   └── styles.css         # スタイルシート（分離）
-│   └── js/
-│       └── app.js             # メインJavaScript（分離）
-└── uploads/                   # 音声ファイル保存先（自動生成）
-    └── input.wav              # 最新の録音データ
-```
+推奨フォルダ構造
+project_root/
+├── data/                # 学習用データ
+│   ├── parent/          # 親の音声
+│   │   ├── session1_b01.wav
+│   │   ├── session1_b02.wav
+│   │   └── ...
+│   └── child/           # 子供の音声
+│       ├── session1_b01.wav
+│       ├── session1_b02.wav
+│       └── ...
+├── models/
+│   └── gmm.pkl        ← 学習済みモデル
+├── record_hybrid.py     # 録音用スクリプト
+├── train_gmm.py         # 学習・判定用スクリプト
+├── sentence.txt         # 録音用の台本
+├── requirements.txt     # 依存ライブラリ
+└── README.md            # このファイル
 
-## ✨ 機能
 
-### フロントエンド（static/js/app.js）
-- 🎤 **Web Speech API**: 日本語音声認識
-- 🔴 **MediaRecorder API**: 音声録音（webm形式）
-- 📤 **FormData送信**: テキスト + 音声ファイルを同時送信
-- 🎨 **リアルタイムUI更新**: ステータス・シンクロ率・ログ表示
-- 🗣️ **音声合成**: システム応答の読み上げ
+Ubunruならシェルでかんたんに音声ファイル名を変更できる
+たとえばs3→childならdata/childフォルダで
 
-### バックエンド（app.py）
-- 📥 **音声ファイル受信**: FormDataから音声ファイルを取得
-- 💾 **ファイル保存**: `uploads/input.wav` として保存
-- 🔍 **話者判定（準備完了）**: 保存された音声で識別可能
-- 📊 **シンクロ率管理**: MOTHER/CHILDに応じて増減
-- 🔄 **状態管理**: 会話履歴・システム状態の保持
+cd ~/memberB/data/child
 
-## セットアップ
+# s3_bXX.wav → child_bXX.wav に一括変換
+for f in s3_b*.wav; do
+    mv "$f" "child_${f#s3_}"
+done
 
-### 1. 依存パッケージのインストール
 
-```bash
-pip install -r requirements.txt
-```
 
-### 2. サーバーの起動
 
-```bash
-python app.py
-```
+各Pythonファイルの使い方
+１．録音用スクリプト(record_hybrid.py)
+サンプリングレートなどは固定
+SR = 16000        # サンプリングレート 16kHz
+CH = 1            # チャンネル数 1（モノラル）
+SAMPLE_WIDTH = 2  # サンプル幅 2バイト = 16bit PCM
 
-サーバーが起動したら、ブラウザで以下にアクセス:
-```
-http://localhost:5001
-```
+使い方：python record_hybrid.py --speaker [speaker]
+sentence.txtを参照して、録音対象の文章を提示し、data/speaker/speaker_bXX.wavで保存
 
-## 使い方
+２.学習判定用スクリプト(train_gmm.py)
+使い方：python train_gmm.py
+入力：data/parent/とdata/child/のWAVファイル（可変）(l49あたりの配列の中身を変えればいい)
 
-1. **マイクボタンをクリック**: 音声認識を開始
-2. **話しかける**: 日本語で話しかけると自動で認識
-3. **話者判定**: 
-   - 「片付けなさい」「宿題やりなさい」などの母親らしい言葉 → MOTHER判定
-   - その他の発言 → CHILD判定
-4. **シンクロ率**: 
-   - MOTHER判定で上昇（+15〜30%）
-   - CHILD判定で下降（-5〜15%）
-5. **応答**: システムが音声で返答
+出力：標準出力に判定結果
+判定: child
+確信度: {'parent': 0.05, 'child': 0.95}
 
-## UIコンポーネント
+models/gmm.pklにモデルファイルを保存
 
-### システムステータス（左上）
-- 現在の状態: IDLE / LISTENING / PROCESSING / SPEAKING
-- 稼働時間表示
+３.判定用スクリプト(identify.py)
+使い方：identify.py --wav [音声ファイルのパス]
+入力：学習済みモデルファイル：models/gmm.pkl
+入力；判定対象のWAVファイルファイル
+出力：標準出力に判定結果と確信度を表示
+判定: child
+確信度: {'parent': 0.22, 'child': 0.77}
 
-### 話者判定パネル（左中）
-- 👩 MOTHER: 管理者権限（赤色）
-- 🧒 CHILD: ユーザー権限（青色）
-- 👤 UNKNOWN: 待機中（グレー）
-
-### コントロールパネル（左下）
-- START/STOP LISTENING: 音声認識の開始/停止
-- RESET SYSTEM: システム状態をリセット
-
-### シンクロ率ゲージ（右上）
-- 0-30%: USER LEVEL（青色）
-- 30-60%: ELEVATED（黄色）
-- 60-90%: ADMIN（オレンジ色）
-- 90-100%: MAXIMUM（赤色）
-
-### 音声入力表示（右中）
-- リアルタイムで認識中のテキストを表示
-
-### 会話ログ（右下）
-- 最新10件の会話履歴を表示
-- CLEARボタンでログをクリア
-
-## API エンドポイント
-
-### POST /api/command
-音声コマンドを送信（**v2.0: FormData対応**）
-
-**Request (FormData):**
-```
-text: "ユーザーの発言内容" (string)
-audio: 音声ファイル (Blob/File, webm形式)
-```
-
-**Response:**
-```json
-{
-  "speaker": "MOTHER" | "CHILD",
-  "sync_rate": 0-100,
-  "response": "システムの応答テキスト",
-  "timestamp": "ISO8601形式のタイムスタンプ",
-  "audio_saved": true | false,
-  "audio_path": "uploads/input.wav"
-}
-```
-
-### GET /api/status
-現在のシステム状態を取得
-
-**Response:**
-```json
-{
-  "sync_rate": 0-100,
-  "speaker": "MOTHER" | "CHILD" | "UNKNOWN",
-  "status": "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING",
-  "log_count": 0-10
-}
-```
-
-### POST /api/reset
-システム状態をリセット
-
-## ブラウザ対応
-
-- ✅ Google Chrome（推奨）
-- ✅ Microsoft Edge
-- ❌ Firefox（Web Speech APIの制限あり）
-- ❌ Safari（Web Speech APIの制限あり）
-
-**注意**: 音声認識機能を使用するには、Google ChromeまたはEdgeブラウザが必要です。
-
-## カスタマイズポイント
-
-### デザイン変更
-`templates/index.html`の`<style>`セクションで以下をカスタマイズ可能:
-- カラースキーム（現在は緑ベース）
-- アニメーション速度
-- フォント
-
-### 話者判定ロジック
-`app.py`の`command()`関数で判定ロジックをカスタマイズ:
-```python
-mother_keywords = ['片付け', '掃除', '宿題', 'やりなさい', 'ダメ', '早く']
-```
-
-### シンクロ率の増減幅
-```python
-system_state["sync_rate"] = min(100, system_state["sync_rate"] + random.randint(15, 30))
-```
-
-## 将来の拡張
-
-- [ ] 機械学習モデルによる高精度な話者認識
-- [ ] 感情分析の追加
-- [ ] 複数ユーザーの登録・管理
-- [ ] 会話履歴の永続化（データベース連携）
-- [ ] IoTデバイス連携（スマート家電の制御）
-- [ ] カスタムコマンドの登録機能
-
-## ライセンス
-
-MIT License
-
-## 作者
-
-田中 悠飛 (03250433)
-音声認識を利用した新時代のスマートスピーカーを作るプロジェクト
-``` bash
-# 1. コードを持ってくる
-git pull
-
-# 2. (まだなら) 仮想環境を作って有効化
-python3 -m venv venv
-source venv/bin/activate
-
-# 3. リストを使って一括インストール
-pip install -r requirements.txt
-```
-によってpython環境を有効化してください.
+※確信度はGMMスコアをsoftmax変換して０〜１の範囲に正規化
 
