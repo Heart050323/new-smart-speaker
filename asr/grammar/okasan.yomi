@@ -1,0 +1,17 @@
+% NOUN_SWICH
+テレビ	てれび
+電気	でんき
+% NOUN_GIVE
+おやつ	おやつ
+% VERB_SWICH
+つけて	つけて
+けして	けして
+つけろ	つけろ
+% VERB_GIVE
+ちょうだい	ちょーだい
+ください		ください
+くれ	くれ
+%NS_B
+<s>	silB
+%NS_E
+<s> 	silE

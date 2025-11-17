@@ -1,0 +1,17 @@
+% NOUN_SWICH
+テレビ	t e r e b i
+電気	d e N k i
+% NOUN_GIVE
+おやつ	o y a ts u
+% VERB_SWICH
+つけて	ts u k e t e
+けして	k e sh i t e
+つけろ	ts u k e r o
+% VERB_GIVE
+ちょうだい	ch o: d a i
+ください	k u d a s a i
+くれ	k u r e
+%NS_B
+<s>	silB
+%NS_E
+<s>	silE
