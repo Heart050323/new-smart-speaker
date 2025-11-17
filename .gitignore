@@ -1,1 +1,9 @@
 venv/
+uploads/
+*.wav
+*.webm
+*.mp3
+*.ogg
+__pycache__/
+*.pyc
+.DS_Store
