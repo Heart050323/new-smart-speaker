@@ -63,6 +63,12 @@ def classify_command(words):
         if "閉め" in joined:
             return "CURTAIN_CLOSE"
 
+    if "うるさい" in joined or "うるせ" in joined or "黙れ" in joined or "黙っ" in joined:
+        return "INSULT"
+
+    if "ありがとう" in joined:
+        return "GRATITUDE"
+
     if "終了" in joined:
         return "EXIT"
 
@@ -88,7 +94,10 @@ def judge_attitude(words):
     polite = ["ください", "お願い", "ちょうだい", "つけて", "してください", "いただけ", "開けて", "閉めて", "上げて", "下げて"]
     
     # 乱暴な表現
-    rude = ["つけろ", "くれ", "しろ", "やれ", "だまれ", "うるさい", "けせ", "開けろ", "閉めろ", "上げろ", "下げろ"]
+    rude = ["つけろ", "くれ", "しろ", "やれ", "けせ", "開けろ", "閉めろ", "上げろ", "下げろ"]
+
+    insult = ["うるさい", "うるせ", "黙れ", "黙っ"]
+    gratitude = ["ありがとう"]
 
     # 丁寧な表現を優先チェック
     for p in polite:
@@ -99,6 +108,14 @@ def judge_attitude(words):
     for r in rude:
         if r in joined:
             return "rude"
+
+    for i in insult:
+        if i in joined:
+            return "insult"
+            
+    for g in gratitude:
+        if g in joined:
+            return "gratitude"
 
     return "neutral"
 
@@ -123,6 +140,17 @@ def get_response_by_attitude(command, attitude, speaker):
         "LIGHT_ON": "電気をつけます",
         "LIGHT_OFF": "電気を消します",
         "GET_SNACK": "おやつを用意します",
+        "SNACK": "おやつの要求を受け取りました",
+        "ALARM_ON": "アラームをセットします",
+        "ALARM_OFF": "アラームを止めます",
+        "MUSIC_ON": "音楽を再生します",
+        "MUSIC_OFF": "音楽を止めます",
+        "VOLUME_UP": "音量を上げます",
+        "VOLUME_DOWN": "音量を下げます",
+        "CURTAIN_OPEN": "カーテンを開けます",
+        "CURTAIN_CLOSE": "カーテンを閉めます",
+        "INSULT": "そんな言い方はよくありません",
+        "GRATITUDE": "どういたしまして",
         "EXIT": "システムを終了します"
     }
     
@@ -134,6 +162,10 @@ def get_response_by_attitude(command, attitude, speaker):
             return f"はい、お母さん。{base_message}。"
         elif attitude == "rude":
             return f"お母さん、承知しました。{base_message}。"
+        elif attitude == "insult":
+            return f"お母さん、悲しいです。{base_message}。"
+        elif attitude == "gratitude":
+            return f"どういたしまして、お母さん。"
         else:
             return f"かしこまりました。{base_message}。"
     
@@ -146,6 +178,10 @@ def get_response_by_attitude(command, attitude, speaker):
                 return f"はい、{base_message}。"
         elif attitude == "rude":
             return "そんな言い方はダメですよ。お母さんを呼んでください。"
+        elif attitude == "insult":
+            return "そんなこと言う子は知りません。"
+        elif attitude == "gratitude":
+            return "どういたしまして。"
         else:
             # コマンドによって態度を変える
             if command in ["GET_SNACK"]:
