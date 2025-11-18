@@ -30,5 +30,10 @@
 11	[開けて]	a k e t e
 11	[閉めろ]	sh i m e r o
 11	[開けろ]	a k e r o
-12	[<s>]	silB
-13	[<s>]	silE
+12	[うるさい]	u r u s a i
+12	[うるせえ]	u r u s e:
+12	[黙れ]	d a m a r e
+12	[黙って]	d a m a q t e
+13	[ありがとう]	a r i g a t o:
+14	[<s>]	silB
+15	[<s>]	silE
