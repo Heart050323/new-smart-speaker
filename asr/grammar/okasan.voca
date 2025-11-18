@@ -1,16 +1,47 @@
-% NOUN_SWICH
+% NOUN_SWITCH
 テレビ	t e r e b i
 電気	d e N k i
 % NOUN_GIVE
 おやつ	o y a ts u
-% VERB_SWICH
+% NOUN_ALARM
+アラーム	a r a: m u
+% NOUN_MUSIC
+音楽	o N g a k u
+% NOUN_VOLUME
+音量	o N ry o:
+% NOUN_CURTAIN
+カーテン	k a: t e N
+% VERB_SWITCH
 つけて	ts u k e t e
-けして	k e sh i t e
+消して	k e sh i t e
 つけろ	ts u k e r o
+けせ	k e s e
 % VERB_GIVE
 ちょうだい	ch o: d a i
 ください	k u d a s a i
 くれ	k u r e
+% VERB_ALARM
+かけて	k a k e t e
+消して	k e sh i t e
+かけろ	k a k e r o
+けせ	k e s e
+% VERB_MUSIC
+かけて	k a k e t e
+消して	k e sh i t e
+かけろ	k a k e r o
+けせ	k e s e
+止めて	t o m e t e
+止めろ	t o m e r o
+% VERB_VOLUME
+上げて	a g e t e
+下げて	s a g e t e
+上げろ	a g e r o
+下げろ	s a g e r o
+% VERB_CURTAIN
+閉めて	sh i m e t e
+開けて	a k e t e
+閉めろ	sh i m e r o
+開けろ	a k e r o
 %NS_B
 <s>	silB
 %NS_E
