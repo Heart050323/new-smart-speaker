@@ -1,11 +1,34 @@
 0	[テレビ]	t e r e b i
 0	[電気]	d e N k i
 1	[おやつ]	o y a ts u
-2	[つけて]	ts u k e t e
-2	[けして]	k e sh i t e
-2	[つけろ]	ts u k e r o
-3	[ちょうだい]	ch o: d a i
-3	[ください]	k u d a s a i
-3	[くれ]	k u r e
-4	[<s>]	silB
-5	[<s>]	silE
+2	[アラーム]	a r a: m u
+3	[音楽]	o N g a k u
+4	[音量]	o N ry o:
+5	[カーテン]	k a: t e N
+6	[つけて]	ts u k e t e
+6	[消して]	k e sh i t e
+6	[つけろ]	ts u k e r o
+6	[けせ]	k e s e
+7	[ちょうだい]	ch o: d a i
+7	[ください]	k u d a s a i
+7	[くれ]	k u r e
+8	[かけて]	k a k e t e
+8	[消して]	k e sh i t e
+8	[かけろ]	k a k e r o
+8	[けせ]	k e s e
+9	[かけて]	k a k e t e
+9	[消して]	k e sh i t e
+9	[かけろ]	k a k e r o
+9	[けせ]	k e s e
+9	[止めて]	t o m e t e
+9	[止めろ]	t o m e r o
+10	[上げて]	a g e t e
+10	[下げて]	s a g e t e
+10	[上げろ]	a g e r o
+10	[下げろ]	s a g e r o
+11	[閉めて]	sh i m e t e
+11	[開けて]	a k e t e
+11	[閉めろ]	sh i m e r o
+11	[開けろ]	a k e r o
+12	[<s>]	silB
+13	[<s>]	silE
