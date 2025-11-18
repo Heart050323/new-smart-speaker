@@ -1,6 +1,10 @@
 import pickle
 import numpy as np
 import librosa
+import os
+
+# グローバル変数でモデルをキャッシュ
+_models = None
 
 # 特徴量抽出関数（train_gmm.pyと共通化しておくと便利）
 def extract_features(wav_path, sr=16000, n_mfcc=13):
@@ -8,11 +12,19 @@ def extract_features(wav_path, sr=16000, n_mfcc=13):
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
     return mfcc.T  # (フレーム数, 次元数)
 
-# モデル読み込み
-with open("models/gmm.pkl", "rb") as f:
-    models = pickle.load(f)   # 例: {"parent": gmm_parent, "child": gmm_child}
+def load_models():
+    """モデルを遅延ロード"""
+    global _models
+    if _models is None:
+        model_path = "models/gmm.pkl"
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"モデルファイルが見つかりません: {model_path}\ntrain_gmm.pyでモデルを学習してください。")
+        with open(model_path, "rb") as f:
+            _models = pickle.load(f)   # 例: {"parent": gmm_parent, "child": gmm_child}
+    return _models
 
 def identify(wav_path):
+    models = load_models()
     features = extract_features(wav_path)
     scores = {}
     for label, model in models.items():

@@ -102,7 +102,7 @@ function updateSpeaker(speaker) {
 }
 
 // ========== ログエントリー追加 ==========
-function addLogEntry(userText, speaker, response, timestamp, hasAudio = false) {
+function addLogEntry(userText, speaker, response, timestamp, hasAudio = false, confidence = null, method = null, command = null, attitude = null) {
     if (elements.conversationLog.querySelector('.text-gray-600')) {
         elements.conversationLog.innerHTML = '';
     }
@@ -113,7 +113,57 @@ function addLogEntry(userText, speaker, response, timestamp, hasAudio = false) {
     
     const time = new Date(timestamp).toLocaleTimeString('ja-JP');
     const speakerColor = speaker === 'MOTHER' ? 'text-red-400' : 'text-blue-400';
+    
+    // 音声データ送信インジケーター
     const audioIndicator = hasAudio ? '<span class="text-xs text-purple-400 ml-2">🎤 音声データ送信済</span>' : '';
+    
+    // 確信度表示（GMM使用時）
+    let confidenceHtml = '';
+    if (confidence && method === 'GMM') {
+        const confPercent = (confidence[speaker.toLowerCase()] * 100).toFixed(1);
+        confidenceHtml = `<span class="text-xs text-cyan-400 ml-2">📊 GMM確信度: ${confPercent}%</span>`;
+    } else if (method === 'keyword') {
+        confidenceHtml = '<span class="text-xs text-yellow-400 ml-2">🔤 キーワード判定</span>';
+    }
+    
+    // コマンド表示
+    let commandHtml = '';
+    if (command) {
+        const commandLabels = {
+            'TV_ON': '📺 テレビON',
+            'TV_OFF': '📺 テレビOFF',
+            'LIGHT_ON': '💡 電気ON',
+            'LIGHT_OFF': '💡 電気OFF',
+            'GET_SNACK': '🍪 おやつ',
+            'EXIT': '🚪 終了'
+        };
+        const commandLabel = commandLabels[command] || command;
+        commandHtml = `<span class="text-xs text-green-400 ml-2">${commandLabel}</span>`;
+    }
+    
+    // 態度表示
+    let attitudeHtml = '';
+    if (attitude) {
+        const attitudeIcons = {
+            'polite': '😊',
+            'rude': '😠',
+            'neutral': '😐'
+        };
+        const attitudeLabels = {
+            'polite': '丁寧',
+            'rude': '乱暴',
+            'neutral': '普通'
+        };
+        const attitudeColors = {
+            'polite': 'text-green-400',
+            'rude': 'text-red-400',
+            'neutral': 'text-gray-400'
+        };
+        const icon = attitudeIcons[attitude] || '❓';
+        const label = attitudeLabels[attitude] || attitude;
+        const color = attitudeColors[attitude] || 'text-gray-400';
+        attitudeHtml = `<span class="text-xs ${color} ml-2">${icon} ${label}</span>`;
+    }
     
     entry.innerHTML = `
         <div class="flex justify-between items-start mb-1">
@@ -121,7 +171,7 @@ function addLogEntry(userText, speaker, response, timestamp, hasAudio = false) {
             <span class="text-xs text-gray-500">${time}</span>
         </div>
         <div class="text-sm text-gray-300 mb-1">
-            <span class="text-gray-500">INPUT:</span> ${escapeHtml(userText)}${audioIndicator}
+            <span class="text-gray-500">INPUT:</span> ${escapeHtml(userText)}${audioIndicator}${confidenceHtml}${commandHtml}${attitudeHtml}
         </div>
         <div class="text-sm text-green-400">
             <span class="text-gray-500">OUTPUT:</span> ${escapeHtml(response)}
@@ -283,7 +333,7 @@ async function processVoiceCommand(text, audioBlob) {
         
         updateSpeaker(data.speaker);
         updateSyncRate(data.sync_rate);
-        addLogEntry(text, data.speaker, data.response, data.timestamp, true);
+        addLogEntry(text, data.speaker, data.response, data.timestamp, true, data.confidence, data.method, data.command, data.attitude);
         
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(data.response);
