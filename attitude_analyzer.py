@@ -39,6 +39,30 @@ def classify_command(words):
             return "GET_SNACK"
         return "SNACK"
 
+    if "アラーム" in joined:
+        if "かけ" in joined:
+            return "ALARM_ON"
+        if "けし" in joined or "とめ" in joined:
+            return "ALARM_OFF"
+
+    if "音楽" in joined:
+        if "かけ" in joined:
+            return "MUSIC_ON"
+        if "けし" in joined or "とめ" in joined:
+            return "MUSIC_OFF"
+
+    if "音量" in joined:
+        if "上げ" in joined:
+            return "VOLUME_UP"
+        if "下げ" in joined:
+            return "VOLUME_DOWN"
+
+    if "カーテン" in joined:
+        if "開け" in joined:
+            return "CURTAIN_OPEN"
+        if "閉め" in joined:
+            return "CURTAIN_CLOSE"
+
     if "終了" in joined:
         return "EXIT"
 
@@ -61,10 +85,10 @@ def judge_attitude(words):
         joined = "".join(words)
 
     # 丁寧な表現
-    polite = ["ください", "お願い", "ちょうだい", "つけて", "してください", "いただけ"]
+    polite = ["ください", "お願い", "ちょうだい", "つけて", "してください", "いただけ", "開けて", "閉めて", "上げて", "下げて"]
     
     # 乱暴な表現
-    rude = ["つけろ", "くれ", "しろ", "やれ", "だまれ", "うるさい"]
+    rude = ["つけろ", "くれ", "しろ", "やれ", "だまれ", "うるさい", "けせ", "開けろ", "閉めろ", "上げろ", "下げろ"]
 
     # 丁寧な表現を優先チェック
     for p in polite:
