@@ -117,15 +117,7 @@ function addLogEntry(userText, speaker, response, timestamp, hasAudio = false, c
     // 音声データ送信インジケーター
     const audioIndicator = hasAudio ? '<span class="text-xs text-purple-400 ml-2">🎤 音声データ送信済</span>' : '';
     
-    // 確信度表示（GMM使用時）
     let confidenceHtml = '';
-    if (confidence && method === 'GMM') {
-        const confPercent = (confidence[speaker.toLowerCase()] * 100).toFixed(1);
-        confidenceHtml = `<span class="text-xs text-cyan-400 ml-2">📊 GMM確信度: ${confPercent}%</span>`;
-    } else if (method === 'keyword') {
-        confidenceHtml = '<span class="text-xs text-yellow-400 ml-2">🔤 キーワード判定</span>';
-    }
-    
     // コマンド表示
     let commandHtml = '';
     if (command) {

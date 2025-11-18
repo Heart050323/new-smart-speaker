@@ -173,11 +173,19 @@ def command():
         except Exception as e:
             print(f"❌ 態度分析エラー: {e}")
     
-    # シンクロ率の更新（母の発言で上昇、子の発言で下降）
-    if speaker == "MOTHER":
-        system_state["sync_rate"] = min(100, system_state["sync_rate"] + random.randint(15, 30))
+    # 📊 シンクロ率の更新（確信度ベース）
+    if confidence and 'parent' in confidence:
+        # 母親の確信度を0-100のパーセンテージに変換
+        mother_confidence = float(confidence.get('parent', 0))
+        system_state["sync_rate"] = int(mother_confidence * 100)
+        print(f"📈 シンクロ率を更新: {system_state['sync_rate']}% (母親確信度: {mother_confidence:.2%})")
     else:
-        system_state["sync_rate"] = max(0, system_state["sync_rate"] - random.randint(5, 15))
+        # 確信度がない場合は従来のロジック（キーワードベース）
+        if speaker == "MOTHER":
+            system_state["sync_rate"] = min(100, system_state["sync_rate"] + random.randint(15, 30))
+        else:
+            system_state["sync_rate"] = max(0, system_state["sync_rate"] - random.randint(5, 15))
+        print(f"📈 シンクロ率を更新: {system_state['sync_rate']}% (キーワードベース)")
     
     # 🎭 応答生成（態度に応じた応答）
     if ATTITUDE_ANALYZER_AVAILABLE and command and attitude:
