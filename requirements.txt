@@ -4,4 +4,9 @@ sounddevice==0.4.6
 simpleaudio==1.0.4
 librosa==0.10.1
 scikit-learn==1.5.0
-numpy==1.26.0
+numpy==1.26.4
+soundfile==0.12.1
+torch==2.0.1
+torchaudio==2.0.2
+speechbrain>=0.5.16
+huggingface_hub<0.23

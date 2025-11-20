@@ -114,6 +114,12 @@ def command():
     # テキストデータの取得
     user_text = request.form.get('text', '')
     
+    print("\n" + "="*60)
+    print("📥 新しいリクエストを受信")
+    print(f"📝 テキスト: {user_text}")
+    print(f"📦 FormData keys: {list(request.form.keys())}")
+    print(f"🎤 Files keys: {list(request.files.keys())}")
+    
     # 音声ファイルの処理
     audio_saved = False
     audio_path = None
@@ -122,21 +128,68 @@ def command():
     
     if 'audio' in request.files:
         audio_file = request.files['audio']
+        print(f"🎵 音声ファイル受信:")
+        print(f"   - ファイル名: {audio_file.filename}")
+        print(f"   - Content-Type: {audio_file.content_type}")
+        print(f"   - Stream position: {audio_file.stream.tell()}")
+        
         if audio_file and audio_file.filename:
             # ファイル名を安全化して保存
             filename = 'input.wav'  # 固定ファイル名で上書き保存
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             
             try:
-                audio_file.save(filepath)
-                audio_saved = True
-                audio_path = filepath
-                print(f"✅ 音声ファイルを保存しました: {filepath}")
-                print(f"📊 ファイルサイズ: {os.path.getsize(filepath)} bytes")
+                # 一時ファイルとして保存（WebM形式）
+                temp_webm = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_input.webm')
+                audio_file.save(temp_webm)
+                print(f"📥 WebMファイルを一時保存: {temp_webm}")
+                
+                # WebMをWAVに変換（16kHzにリサンプリング）
+                try:
+                    import librosa
+                    import soundfile as sf
+                    
+                    # WebMを読み込んで16kHzにリサンプリング
+                    y, sr = librosa.load(temp_webm, sr=16000)  # 強制的に16kHzに
+                    
+                    # WAVとして保存
+                    sf.write(filepath, y, 16000, subtype='PCM_16')
+                    
+                    # 一時ファイルを削除
+                    if os.path.exists(temp_webm):
+                        os.remove(temp_webm)
+                    
+                    audio_saved = True
+                    audio_path = filepath
+                    file_size = os.path.getsize(filepath)
+                    duration = len(y) / 16000
+                    rms_level = np.sqrt(np.mean(y**2))
+                    
+                    print(f"✅ WAVファイルに変換して保存: {filepath}")
+                    print(f"📊 ファイルサイズ: {file_size} bytes ({file_size/1024:.2f} KB)")
+                    print(f"🎧 音声情報:")
+                    print(f"   - サンプリングレート: 16000 Hz (固定)")
+                    print(f"   - 長さ: {duration:.2f} 秒")
+                    print(f"   - サンプル数: {len(y)}")
+                    print(f"   - 音声レベル (RMS): {rms_level:.6f}")
+                    
+                    if rms_level < 0.001:
+                        print(f"⚠️  警告: 音声レベルが非常に低いです！マイク設定を確認してください")
+                    
+                except Exception as e:
+                    import traceback
+                    print(f"❌ WebM→WAV変換エラー: {e}")
+                    print(traceback.format_exc())
+                    # 変換失敗時は元のファイルをそのまま使用
+                    audio_file.seek(0)
+                    audio_file.save(filepath)
+                    audio_saved = True
+                    audio_path = filepath
                 
                 # 🔍 話者識別の実行
-                if SPEAKER_ID_AVAILABLE and os.path.exists("models/gmm.pkl"):
+                if SPEAKER_ID_AVAILABLE and os.path.exists("models/ecapa.pkl"):
                     try:
+                        print("🔍 話者識別を開始...")
                         predicted_speaker, confidence = identify(filepath)
                         # GMM の出力 (parent/child) を MOTHER/CHILD に変換
                         speaker_map = {
@@ -146,13 +199,19 @@ def command():
                         speaker = speaker_map.get(predicted_speaker, "UNKNOWN")
                         print(f"🎯 話者識別結果: {speaker} (確信度: {confidence})")
                     except Exception as e:
+                        import traceback
                         print(f"❌ 話者識別エラー: {e}")
+                        print(traceback.format_exc())
                         speaker = "UNKNOWN"
                 else:
                     print("⚠️  話者識別モデルが見つかりません。キーワード判定を使用します。")
                     
             except Exception as e:
+                import traceback
                 print(f"❌ 音声ファイルの保存に失敗: {e}")
+                print(traceback.format_exc())
+    else:
+        print("⚠️  音声データが含まれていません")
     
     # キーワードベース判定（GMM判定が失敗した場合のフォールバック）
     if speaker == "UNKNOWN" and user_text:

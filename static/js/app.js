@@ -127,6 +127,17 @@ function addLogEntry(userText, speaker, response, timestamp, hasAudio = false, c
             'LIGHT_ON': '💡 電気ON',
             'LIGHT_OFF': '💡 電気OFF',
             'GET_SNACK': '🍪 おやつ',
+            'SNACK': '🍪 おやつ要求',
+            'ALARM_ON': '⏰ アラームON',
+            'ALARM_OFF': '⏰ アラームOFF',
+            'MUSIC_ON': '🎵 音楽ON',
+            'MUSIC_OFF': '🎵 音楽OFF',
+            'VOLUME_UP': '🔊 音量UP',
+            'VOLUME_DOWN': '🔉 音量DOWN',
+            'CURTAIN_OPEN': '🪟 カーテン開',
+            'CURTAIN_CLOSE': '🪟 カーテン閉',
+            'INSULT': '😡 侮辱',
+            'GRATITUDE': '🙏 感謝',
             'EXIT': '🚪 終了'
         };
         const commandLabel = commandLabels[command] || command;
@@ -139,17 +150,23 @@ function addLogEntry(userText, speaker, response, timestamp, hasAudio = false, c
         const attitudeIcons = {
             'polite': '😊',
             'rude': '😠',
-            'neutral': '😐'
+            'neutral': '😐',
+            'insult': '😡',
+            'gratitude': '🙏'
         };
         const attitudeLabels = {
             'polite': '丁寧',
             'rude': '乱暴',
-            'neutral': '普通'
+            'neutral': '普通',
+            'insult': '侮辱的',
+            'gratitude': '感謝'
         };
         const attitudeColors = {
             'polite': 'text-green-400',
             'rude': 'text-red-400',
-            'neutral': 'text-gray-400'
+            'neutral': 'text-gray-400',
+            'insult': 'text-red-600',
+            'gratitude': 'text-yellow-400'
         };
         const icon = attitudeIcons[attitude] || '❓';
         const label = attitudeLabels[attitude] || attitude;
@@ -257,19 +274,30 @@ async function startRecording() {
         }
         
         audioChunks = [];
+        
+        // サポートされているMIMEタイプを確認
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+            ? 'audio/webm;codecs=opus' 
+            : 'audio/webm';
+        
+        console.log(`🎤 使用するMIMEタイプ: ${mimeType}`);
+        
         mediaRecorder = new MediaRecorder(audioStream, {
-            mimeType: 'audio/webm'
+            mimeType: mimeType,
+            audioBitsPerSecond: 128000  // 128kbps
         });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 audioChunks.push(event.data);
+                console.log(`📦 チャンク受信: ${event.data.size} bytes`);
             }
         };
         
-        mediaRecorder.start();
+        // 100msごとにデータを取得（より細かく録音）
+        mediaRecorder.start(100);
         isRecording = true;
-        console.log('🔴 録音開始');
+        console.log('🔴 録音開始 (100ms間隔でチャンク収集)');
         
         // 録音インジケーターを追加
         const indicator = '<span class="recording-indicator ml-2"></span>';
@@ -286,12 +314,21 @@ async function startRecording() {
 // ========== 録音停止 ==========
 function stopRecording(recognizedText) {
     if (!isRecording || !mediaRecorder) {
+        console.warn('⚠️  録音停止: 録音中ではありません');
         return;
     }
     
+    console.log(`🛑 録音停止開始 (チャンク数: ${audioChunks.length})`);
+    
     mediaRecorder.onstop = () => {
-        console.log('⏹️ 録音停止');
+        console.log(`⏹️ 録音停止完了 (チャンク数: ${audioChunks.length})`);
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        console.log(`🎵 音声Blob作成: ${audioBlob.size} bytes`);
+        
+        if (audioBlob.size === 0) {
+            console.error('❌ 音声データが空です！');
+        }
+        
         processVoiceCommand(recognizedText, audioBlob);
         isRecording = false;
     };
@@ -312,8 +349,16 @@ async function processVoiceCommand(text, audioBlob) {
         console.log('📤 送信データ:', {
             text: text,
             audioSize: audioBlob.size,
-            audioType: audioBlob.type
+            audioType: audioBlob.type,
+            audioDuration: audioBlob.size / 16000 / 2, // 概算
         });
+        
+        // 音声データが空でないか確認
+        if (audioBlob.size === 0) {
+            console.warn('⚠️  音声データが空です！');
+        } else {
+            console.log(`✅ 音声データ: ${audioBlob.size} bytes (${(audioBlob.size/1024).toFixed(2)} KB)`);
+        }
         
         const response = await fetch('/api/command', {
             method: 'POST',
